@@ -1,0 +1,59 @@
+.ambientBackground {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* Initial static CSS state before GSAP attaches */
+.bgLayer:first-child {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bgLayer:not(:first-child) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.bgPurple {
+  background: radial-gradient(circle at 35% 45%, rgba(124, 58, 237, 0.28) 0%, transparent 65%),
+              radial-gradient(circle at 75% 30%, rgba(167, 139, 250, 0.15) 0%, transparent 55%),
+              #130d24;
+}
+
+.bgTeal {
+  background: radial-gradient(circle at 35% 45%, rgba(13, 148, 136, 0.28) 0%, transparent 65%),
+              radial-gradient(circle at 75% 30%, rgba(45, 212, 191, 0.15) 0%, transparent 55%),
+              #081d1a;
+}
+
+.bgOrange {
+  background: radial-gradient(circle at 35% 45%, rgba(234, 88, 12, 0.28) 0%, transparent 65%),
+              radial-gradient(circle at 75% 30%, rgba(251, 146, 60, 0.15) 0%, transparent 55%),
+              #201206;
+}
+
+.bgRed {
+  background: radial-gradient(circle at 35% 45%, rgba(220, 38, 38, 0.28) 0%, transparent 65%),
+              radial-gradient(circle at 75% 30%, rgba(248, 113, 113, 0.15) 0%, transparent 55%),
+              #20080d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambientBackground {
+    display: none !important;
+  }
+}

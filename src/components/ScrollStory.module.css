@@ -12,10 +12,131 @@
   background-color: var(--bg-primary);
 }
 
+/* ==========================================================================
+   Unified Top Stage Navigation & Progress HUD
+   ========================================================================== */
+.stageHud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  background: rgba(10, 12, 16, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hudInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.hudBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hudBrandDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #a78bfa;
+  box-shadow: 0 0 8px #a78bfa;
+}
+
+.hudBrandText {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+}
+
+.indicatorPills {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.indicatorPill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(20, 24, 32, 0.6);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.indicatorPill:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.indicatorPillActive {
+  background: rgba(255, 255, 255, 0.15);
+  font-weight: 700;
+}
+
+.pillIndex {
+  font-family: monospace;
+}
+
+.pillTitle {
+  white-space: nowrap;
+}
+
+.hudCurrentStatus {
+  display: flex;
+  align-items: center;
+}
+
+.hudSceneLabel {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.progressTrack {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progressBar {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(0);
+  will-change: transform;
+  transition: background-color 0.3s ease;
+}
+
+/* ==========================================================================
+   Scenes & Content
+   ========================================================================== */
 .scenesContainer {
   position: relative;
   width: 100%;
   height: 100%;
+  z-index: 1;
 }
 
 .scene {
@@ -26,25 +147,53 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  visibility: hidden;
   pointer-events: none;
 }
 
-.sceneActive {
+.scene[data-scene-index="0"] {
+  z-index: 10;
+}
+
+.scene[data-scene-index="1"] {
+  z-index: 11;
+}
+
+.scene[data-scene-index="2"] {
+  z-index: 12;
+}
+
+.scene[data-scene-index="3"] {
+  z-index: 13;
+}
+
+.sceneContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+/* Static fallback for initial render before GSAP mounts */
+.scene:first-child .sceneContent {
   opacity: 1;
   visibility: visible;
-  pointer-events: auto;
+}
+
+.scene:not(:first-child) .sceneContent {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .sceneInner {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1.15fr 0.85fr;
   gap: 3.5rem;
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 2rem 2.5rem;
+  padding: 4.5rem 2.5rem 2rem;
   align-items: center;
   box-sizing: border-box;
 }
@@ -57,24 +206,19 @@
 }
 
 .cardScrubWrapper {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
   width: 100%;
   max-width: 520px;
-}
-
-.stageCard {
-  width: 100%;
-  min-height: 380px;
-  max-height: 460px;
-  aspect-ratio: 4 / 3;
-  transition: none !important;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  will-change: clip-path;
 }
 
 .narrativeCol {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  will-change: opacity, transform;
 }
 
 .sceneHeader {
@@ -112,7 +256,7 @@
 }
 
 .sceneDescription {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   line-height: 1.6;
   color: var(--text-secondary);
   max-width: 500px;
@@ -154,89 +298,17 @@
   color: var(--text-muted);
 }
 
-.sceneIndicator {
-  position: absolute;
-  bottom: 1.75rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.625rem;
-  width: 90%;
-  max-width: 520px;
-  box-sizing: border-box;
-}
-
-.indicatorPills {
-  display: flex;
-  gap: 0.5rem;
-  width: 100%;
-  justify-content: center;
-}
-
-.indicatorPill {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.875rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(20, 24, 32, 0.8);
-  backdrop-filter: blur(8px);
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-
-.indicatorPill:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-.indicatorPillActive {
-  background: rgba(255, 255, 255, 0.15);
-  font-weight: 700;
-}
-
-.pillIndex {
-  font-family: monospace;
-}
-
-.pillTitle {
-  white-space: nowrap;
-}
-
-.progressTrack {
-  width: 100%;
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.progressBar {
-  width: 100%;
-  height: 100%;
-  transform-origin: left center;
-  transform: scaleX(0);
-  will-change: transform;
-  transition: background-color 0.3s ease;
-}
-
-/* Tablet / Medium Breakpoint */
+/* ==========================================================================
+   Tablet Breakpoint (max-width: 1024px)
+   ========================================================================== */
 @media (max-width: 1024px) {
-  .sceneInner {
-    gap: 2rem;
-    padding: 2rem 1.5rem;
+  .hudInner {
+    padding: 0.625rem 1.5rem;
   }
 
-  .stageCard {
-    min-height: 320px;
-    max-height: 380px;
+  .sceneInner {
+    gap: 2rem;
+    padding: 4.25rem 1.5rem 1.5rem;
   }
 
   .sceneTitle {
@@ -248,14 +320,42 @@
   }
 }
 
-/* Mobile Breakpoint (375x667 tested) */
+/* ==========================================================================
+   Mobile Breakpoint (max-width: 767px)
+   ========================================================================== */
 @media (max-width: 767px) {
+  .hudInner {
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .hudBrandText,
+  .hudCurrentStatus {
+    display: none;
+  }
+
+  .indicatorPills {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .indicatorPill {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.6875rem;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .pillTitle {
+    display: none;
+  }
+
   .sceneInner {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem 1rem 3.75rem;
+    gap: 1rem;
+    padding: 3.5rem 1rem 1.25rem;
     height: 100%;
   }
 
@@ -265,13 +365,6 @@
 
   .cardScrubWrapper {
     max-width: 100%;
-  }
-
-  .stageCard {
-    min-height: 180px;
-    max-height: 210px;
-    padding: 1.25rem;
-    aspect-ratio: auto;
   }
 
   .narrativeCol {
@@ -307,30 +400,11 @@
   .scrollHint {
     font-size: 0.6875rem;
   }
-
-  .sceneIndicator {
-    bottom: 0.75rem;
-    width: calc(100% - 1.5rem);
-    gap: 0.4rem;
-  }
-
-  .indicatorPills {
-    gap: 0.35rem;
-  }
-
-  .indicatorPill {
-    padding: 0.3rem 0.5rem;
-    font-size: 0.6875rem;
-    flex: 1;
-    justify-content: center;
-  }
-
-  .pillTitle {
-    display: none;
-  }
 }
 
-/* Prefers-reduced-motion fallback */
+/* ==========================================================================
+   Prefers-reduced-motion Mode
+   ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   .storyContainer {
     position: relative;
@@ -345,6 +419,10 @@
     overflow: visible;
   }
 
+  .stageHud {
+    display: none;
+  }
+
   .scenesContainer {
     display: flex;
     flex-direction: column;
@@ -354,7 +432,8 @@
     margin: 0 auto;
   }
 
-  .scene {
+  .scene,
+  .scene:not(:first-child) {
     position: relative;
     inset: auto;
     width: 100%;
@@ -367,16 +446,30 @@
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
   }
 
+  .sceneContent,
+  .scene:first-child .sceneContent,
+  .scene:not(:first-child) .sceneContent {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    filter: none !important;
+    will-change: auto;
+  }
+
   .sceneInner {
     padding: 2rem;
   }
 
   .cardScrubWrapper {
     transform: none !important;
+    clip-path: none !important;
     will-change: auto;
   }
 
-  .sceneIndicator {
-    display: none;
+  .narrativeCol {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    will-change: auto;
   }
 }
