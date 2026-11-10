@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useCallback, useSyncExternalStore }
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SceneVisual } from "./SceneVisual";
+import { SharedVisualShell } from "./SharedVisualShell";
 import { AmbientBackground } from "./AmbientBackground";
 import styles from "./ScrollStory.module.css";
 
@@ -54,8 +55,8 @@ export const STORY_SCENES: StoryScene[] = [
     bgColor: "#081d1a",   // Deep Teal
     accentColor: "#2dd4bf",
     description:
-      "A single-focus visual handoff eliminates double-contour ghosting. Split workspace panels shift with decoupled parallax timing.",
-    tag: "Phase 3: Single-Focus Handoff",
+      "A shared visual shell eliminates spliced contours. Internal interface panels morph smoothly with continuous color evolution.",
+    tag: "Phase 3: Shared Visual Shell",
   },
   {
     id: "scene-3",
@@ -87,14 +88,34 @@ const SCENE_TARGET_PROGRESS = [0.00, 0.375, 0.625, 0.88];
 export function ScrollStory() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const sceneContentRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Wrappers & Layers
   const cardWrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
   const narrativeRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sceneContentRefs = useRef<(HTMLDivElement | null)[]>([]);
   const backLayerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mainLayerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const fgLayerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const bgLayerRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Shared Visual Shell Internal Refs for T1 Morphing
+  const sharedCardRef = useRef<HTMLElement | null>(null);
+  const content1Ref = useRef<HTMLDivElement | null>(null);
+  const content2Ref = useRef<HTMLDivElement | null>(null);
+  const tag1Ref = useRef<HTMLElement | null>(null);
+  const tag2Ref = useRef<HTMLElement | null>(null);
+  const num1Ref = useRef<HTMLElement | null>(null);
+  const num2Ref = useRef<HTMLElement | null>(null);
+  const sub1Ref = useRef<HTMLElement | null>(null);
+  const sub2Ref = useRef<HTMLElement | null>(null);
+  const head1Ref = useRef<HTMLElement | null>(null);
+  const head2Ref = useRef<HTMLElement | null>(null);
+  const fg1ChipsRef = useRef<HTMLDivElement | null>(null);
+  const fg2ChipsRef = useRef<HTMLDivElement | null>(null);
+  const back1AccRef = useRef<HTMLDivElement | null>(null);
+  const back2AccRef = useRef<HTMLDivElement | null>(null);
+  const backBadgeRef = useRef<HTMLDivElement | null>(null);
+
   const progressBarRef = useRef<HTMLDivElement>(null);
   const currentSceneRef = useRef<number>(0);
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
@@ -140,7 +161,7 @@ export function ScrollStory() {
         const textYShift = isDesktop ? 16 : 10;
 
         // Parallax parameters per layer (strictly within recommended ranges)
-        // BackLayer: ±12px Y, ±6px X, 0.99–1.01 scale
+        // BackLayer: ±14px Y, ±6px X, 0.99–1.01 scale
         const backY = isDesktop ? 14 : 7;
         const backX = isDesktop ? 6 : 3;
 
@@ -183,40 +204,95 @@ export function ScrollStory() {
 
         scrollTriggerRef.current = tl.scrollTrigger || null;
 
+        // ================================================================
         // 1. Initial State Baseline at t = 0
+        // ================================================================
         bgLayerRefs.current.forEach((el, i) => {
           if (el) {
             tl.set(el, { autoAlpha: i === 0 ? 1 : 0 }, 0);
           }
         });
 
-        sceneContentRefs.current.forEach((el, i) => {
-          if (el) {
-            tl.set(el, { autoAlpha: i === 0 ? 1 : 0, y: 0, filter: "none" }, 0);
-          }
-        });
-
-        cardWrapperRefs.current.forEach((el, i) => {
-          if (el) {
-            tl.set(
-              el,
-              { clipPath: i === 0 ? "inset(0% 0% 0% 0%)" : "inset(0% 0% 100% 0%)" },
-              0
-            );
-          }
-        });
-
+        // Narrative & Scene Content baseline
         narrativeRefs.current.forEach((el, i) => {
           if (el) {
-            tl.set(
-              el,
-              { autoAlpha: i === 0 ? 1 : 0, y: i === 0 ? 0 : textYShift },
-              0
-            );
+            tl.set(el, { autoAlpha: i === 0 ? 1 : 0, y: i === 0 ? 0 : textYShift }, 0);
           }
         });
 
+        sceneContentRefs.current.forEach((el, i) => {
+          if (el) {
+            tl.set(el, { autoAlpha: i === 0 ? 1 : 0 }, 0);
+          }
+        });
+
+        // Card wrappers baseline:
+        // cw0 (Shared Visual Shell): persistent, visible, NO clip-path
+        const cw0 = cardWrapperRefs.current[0];
+        if (cw0) {
+          tl.set(cw0, { autoAlpha: 1, clipPath: "none" }, 0);
+        }
+
+        // cw2 (Scene 3 wrapper) & cw3 (Scene 4 wrapper): clipped initially
+        const cw2 = cardWrapperRefs.current[2];
+        if (cw2) {
+          tl.set(cw2, { autoAlpha: 0, clipPath: "inset(0% 0% 100% 0%)" }, 0);
+        }
+        const cw3 = cardWrapperRefs.current[3];
+        if (cw3) {
+          tl.set(cw3, { autoAlpha: 0, clipPath: "inset(0% 0% 100% 0%)" }, 0);
+        }
+
+        // Shared Visual Shell Internal Elements Baseline at t = 0
+        if (sharedCardRef.current) {
+          tl.set(sharedCardRef.current, { backgroundColor: "#7c3aed" }, 0);
+        }
+        if (content1Ref.current) {
+          tl.set(content1Ref.current, { opacity: 1, y: 0, scale: 1 }, 0);
+        }
+        if (content2Ref.current) {
+          tl.set(content2Ref.current, { opacity: 0, y: 8, scale: 0.98 }, 0);
+        }
+        if (tag1Ref.current) {
+          tl.set(tag1Ref.current, { opacity: 1, y: 0 }, 0);
+        }
+        if (tag2Ref.current) {
+          tl.set(tag2Ref.current, { opacity: 0, y: 6 }, 0);
+        }
+        if (num1Ref.current) {
+          tl.set(num1Ref.current, { opacity: 0.85, y: 0 }, 0);
+        }
+        if (num2Ref.current) {
+          tl.set(num2Ref.current, { opacity: 0, y: 6 }, 0);
+        }
+        if (sub1Ref.current) {
+          tl.set(sub1Ref.current, { opacity: 0.8, y: 0 }, 0);
+        }
+        if (sub2Ref.current) {
+          tl.set(sub2Ref.current, { opacity: 0, y: 6 }, 0);
+        }
+        if (head1Ref.current) {
+          tl.set(head1Ref.current, { opacity: 1, y: 0 }, 0);
+        }
+        if (head2Ref.current) {
+          tl.set(head2Ref.current, { opacity: 0, y: 8 }, 0);
+        }
+        if (fg1ChipsRef.current) {
+          tl.set(fg1ChipsRef.current, { opacity: 1, y: 0 }, 0);
+        }
+        if (fg2ChipsRef.current) {
+          tl.set(fg2ChipsRef.current, { opacity: 0, y: 10 }, 0);
+        }
+        if (back1AccRef.current) {
+          tl.set(back1AccRef.current, { opacity: 1 }, 0);
+        }
+        if (back2AccRef.current) {
+          tl.set(back2AccRef.current, { opacity: 0 }, 0);
+        }
+
+        // ================================================================
         // 2. Decoupled Ambient Background Layer Transitions
+        // ================================================================
         // Transition 0 -> 1: t in [16, 32]
         if (bgLayerRefs.current[0] && bgLayerRefs.current[1]) {
           tl.to(bgLayerRefs.current[0], { autoAlpha: 0, ease: "sine.inOut", duration: 16 }, 16);
@@ -233,29 +309,31 @@ export function ScrollStory() {
           tl.to(bgLayerRefs.current[3], { autoAlpha: 1, ease: "sine.inOut", duration: 16 }, 66);
         }
 
-        // 3. Single-Focus Scene Handoff (Shared Visual Viewport Mask + Decoupled Staggered Text)
-        const sc0 = sceneContentRefs.current[0];
-        const sc1 = sceneContentRefs.current[1];
-        const sc2 = sceneContentRefs.current[2];
-        const sc3 = sceneContentRefs.current[3];
-
-        const cw1 = cardWrapperRefs.current[1];
-        const cw2 = cardWrapperRefs.current[2];
-        const cw3 = cardWrapperRefs.current[3];
-
+        // ================================================================
+        // 3. Transition 1: Scene 0 -> Scene 1 (Purple -> Teal, Midpoint: 25.0%)
+        //    REMEDIATION V2: Shared Visual Shell + Content Morphing
+        // ================================================================
         const nr0 = narrativeRefs.current[0];
         const nr1 = narrativeRefs.current[1];
         const nr2 = narrativeRefs.current[2];
         const nr3 = narrativeRefs.current[3];
 
-        // ================================================================
-        // Transition 1: Scene 0 -> Scene 1 (Purple -> Teal, Midpoint: 25.0%)
-        // ================================================================
-        // Container Lifecycle: sc1 activates at 21.5, sc0 deactivates at 28.5
-        if (sc1) tl.set(sc1, { autoAlpha: 1 }, 21.5);
-        if (sc0) tl.set(sc0, { autoAlpha: 0 }, 28.5);
+        const sc0 = sceneContentRefs.current[0];
+        const sc1 = sceneContentRefs.current[1];
+        const sc2 = sceneContentRefs.current[2];
+        const sc3 = sceneContentRefs.current[3];
 
-        // Narrative: Staggered handoff (sc0 text fades out [21.5, 24.2], sc1 text fades in [25.8, 28.5])
+        // 3.1 Persistent Shell Background Color Morphing [20.0, 30.0]
+        if (sharedCardRef.current) {
+          tl.fromTo(
+            sharedCardRef.current,
+            { backgroundColor: "#7c3aed" },
+            { backgroundColor: "#0d9488", ease: "power1.inOut", duration: 10.0 },
+            20.0
+          );
+        }
+
+        // 3.2 Staggered Narrative Text Handoff (nr0 fades out [21.5, 24.2], nr1 fades in [25.8, 28.5])
         if (nr0) {
           tl.to(nr0, { autoAlpha: 0, y: -textYShift, ease: "power2.inOut", duration: 2.7 }, 21.5);
         }
@@ -267,25 +345,116 @@ export function ScrollStory() {
             25.8
           );
         }
+        if (sc0) {
+          tl.to(sc0, { autoAlpha: 0, duration: 2.7 }, 21.5);
+        }
+        if (sc1) {
+          tl.fromTo(sc1, { autoAlpha: 0 }, { autoAlpha: 1, duration: 2.7 }, 25.8);
+        }
 
-        // Visual Viewport: Single-Focus Masked Reveal [22.5, 27.5]
-        if (cw1) {
+        // 3.3 Internal Graphic Content Morphing:
+        // Scene 01 preview exits [21.0, 24.5]
+        if (content1Ref.current) {
+          tl.to(
+            content1Ref.current,
+            { opacity: 0, y: -8, scale: 0.98, ease: "power2.inOut", duration: 3.5 },
+            21.0
+          );
+        }
+        // Scene 02 preview enters [25.5, 29.0]
+        if (content2Ref.current) {
           tl.fromTo(
-            cw1,
-            { clipPath: "inset(0% 0% 100% 0%)" },
-            { clipPath: "inset(0% 0% 0% 0%)", ease: "power1.inOut", duration: 5.0 },
-            22.5
+            content2Ref.current,
+            { opacity: 0, y: 8, scale: 0.98 },
+            { opacity: 1, y: 0, scale: 1, ease: "power2.out", duration: 3.5 },
+            25.5
+          );
+        }
+
+        // 3.4 Persistent Chrome & Header Content Morphing:
+        // Breadcrumb Tag
+        if (tag1Ref.current) {
+          tl.to(tag1Ref.current, { opacity: 0, y: -6, ease: "power2.inOut", duration: 2.5 }, 22.0);
+        }
+        if (tag2Ref.current) {
+          tl.fromTo(
+            tag2Ref.current,
+            { opacity: 0, y: 6 },
+            { opacity: 1, y: 0, ease: "power2.out", duration: 2.5 },
+            25.5
+          );
+        }
+
+        // Card Number
+        if (num1Ref.current) {
+          tl.to(num1Ref.current, { opacity: 0, y: -6, ease: "power2.inOut", duration: 2.0 }, 22.5);
+        }
+        if (num2Ref.current) {
+          tl.fromTo(
+            num2Ref.current,
+            { opacity: 0, y: 6 },
+            { opacity: 0.85, y: 0, ease: "power2.out", duration: 2.0 },
+            25.5
+          );
+        }
+
+        // Scene Subtitle
+        if (sub1Ref.current) {
+          tl.to(sub1Ref.current, { opacity: 0, y: -6, ease: "power2.inOut", duration: 2.5 }, 22.0);
+        }
+        if (sub2Ref.current) {
+          tl.fromTo(
+            sub2Ref.current,
+            { opacity: 0, y: 6 },
+            { opacity: 0.8, y: 0, ease: "power2.out", duration: 2.5 },
+            25.5
+          );
+        }
+
+        // Card Heading
+        if (head1Ref.current) {
+          tl.to(head1Ref.current, { opacity: 0, y: -8, ease: "power2.inOut", duration: 2.7 }, 21.8);
+        }
+        if (head2Ref.current) {
+          tl.fromTo(
+            head2Ref.current,
+            { opacity: 0, y: 8 },
+            { opacity: 1, y: 0, ease: "power2.out", duration: 2.7 },
+            25.5
+          );
+        }
+
+        // 3.5 Depth & Accessory Accents:
+        if (back1AccRef.current) {
+          tl.to(back1AccRef.current, { opacity: 0, ease: "power2.inOut", duration: 2.5 }, 22.0);
+        }
+        if (back2AccRef.current) {
+          tl.fromTo(
+            back2AccRef.current,
+            { opacity: 0 },
+            { opacity: 1, ease: "power2.out", duration: 2.5 },
+            25.5
+          );
+        }
+        if (fg1ChipsRef.current) {
+          tl.to(fg1ChipsRef.current, { opacity: 0, y: -8, ease: "power2.inOut", duration: 2.7 }, 21.5);
+        }
+        if (fg2ChipsRef.current) {
+          tl.fromTo(
+            fg2ChipsRef.current,
+            { opacity: 0, y: 8 },
+            { opacity: 1, y: 0, ease: "power2.out", duration: 2.7 },
+            25.8
           );
         }
 
         // ================================================================
-        // Transition 2: Scene 1 -> Scene 2 (Teal -> Orange, Midpoint: 50.0%)
+        // 4. Transition 2: Scene 1 -> Scene 2 (Teal -> Orange, Midpoint: 50.0%)
+        //    Retaining V1 Baseline (Masked Reveal)
         // ================================================================
-        // Container Lifecycle: sc2 activates at 46.5, sc1 deactivates at 53.5
-        if (sc2) tl.set(sc2, { autoAlpha: 1 }, 46.5);
-        if (sc1) tl.set(sc1, { autoAlpha: 0 }, 53.5);
+        if (cw2) tl.set(cw2, { autoAlpha: 1 }, 46.5);
+        if (cw0) tl.set(cw0, { autoAlpha: 0 }, 53.5);
 
-        // Narrative: Staggered handoff (sc1 text fades out [46.5, 49.2], sc2 text fades in [50.8, 53.5])
         if (nr1) {
           tl.to(nr1, { autoAlpha: 0, y: -textYShift, ease: "power2.inOut", duration: 2.7 }, 46.5);
         }
@@ -297,8 +466,13 @@ export function ScrollStory() {
             50.8
           );
         }
+        if (sc1) {
+          tl.to(sc1, { autoAlpha: 0, duration: 2.7 }, 46.5);
+        }
+        if (sc2) {
+          tl.fromTo(sc2, { autoAlpha: 0 }, { autoAlpha: 1, duration: 2.7 }, 50.8);
+        }
 
-        // Visual Viewport: Single-Focus Masked Reveal [47.5, 52.5]
         if (cw2) {
           tl.fromTo(
             cw2,
@@ -309,13 +483,12 @@ export function ScrollStory() {
         }
 
         // ================================================================
-        // Transition 3: Scene 2 -> Scene 3 (Orange -> Red, Midpoint: 75.0%)
+        // 5. Transition 3: Scene 2 -> Scene 3 (Orange -> Red, Midpoint: 75.0%)
+        //    Retaining V1 Baseline (Masked Reveal)
         // ================================================================
-        // Container Lifecycle: sc3 activates at 71.5, sc2 deactivates at 78.5
-        if (sc3) tl.set(sc3, { autoAlpha: 1 }, 71.5);
-        if (sc2) tl.set(sc2, { autoAlpha: 0 }, 78.5);
+        if (cw3) tl.set(cw3, { autoAlpha: 1 }, 71.5);
+        if (cw2) tl.set(cw2, { autoAlpha: 0 }, 78.5);
 
-        // Narrative: Staggered handoff (sc2 text fades out [71.5, 74.2], sc3 text fades in [75.8, 78.5])
         if (nr2) {
           tl.to(nr2, { autoAlpha: 0, y: -textYShift, ease: "power2.inOut", duration: 2.7 }, 71.5);
         }
@@ -327,8 +500,13 @@ export function ScrollStory() {
             75.8
           );
         }
+        if (sc2) {
+          tl.to(sc2, { autoAlpha: 0, duration: 2.7 }, 71.5);
+        }
+        if (sc3) {
+          tl.fromTo(sc3, { autoAlpha: 0 }, { autoAlpha: 1, duration: 2.7 }, 75.8);
+        }
 
-        // Visual Viewport: Single-Focus Masked Reveal [72.5, 77.5]
         if (cw3) {
           tl.fromTo(
             cw3,
@@ -338,49 +516,103 @@ export function ScrollStory() {
           );
         }
 
-        // 4. Independent Spatial Parallax Mapping (BackLayer, MainLayer, ForegroundLayer)
-        // Scene 0: Active range [0, 25]
+        // ================================================================
+        // 6. Independent Spatial Parallax Mapping
+        // ================================================================
+        // Shared Visual Shell Layers (Scenes 1 & 2): Continuous range [0, 50]
         if (backLayerRefs.current[0]) {
-          tl.fromTo(backLayerRefs.current[0], { y: backY, x: -backX, scale: 0.99, force3D: true }, { y: -backY, x: backX, scale: 1.01, ease: "none", duration: 25, force3D: true }, 0);
+          tl.fromTo(
+            backLayerRefs.current[0],
+            { y: backY, x: -backX, scale: 0.99, force3D: true },
+            { y: 0, x: 0, scale: 1.00, ease: "none", duration: 25, force3D: true },
+            0
+          );
+          tl.fromTo(
+            backLayerRefs.current[0],
+            { y: 0, x: 0, scale: 1.00, force3D: true },
+            { y: -backY, x: -backX, scale: 1.01, ease: "none", duration: 25, force3D: true },
+            25
+          );
         }
         if (mainLayerRefs.current[0]) {
-          tl.fromTo(mainLayerRefs.current[0], { y: mainY, x: 0, scale: 0.99, force3D: true }, { y: -mainY, x: 0, scale: 1.02, ease: "none", duration: 25, force3D: true }, 0);
+          tl.fromTo(
+            mainLayerRefs.current[0],
+            { y: mainY, x: 0, scale: 0.99, force3D: true },
+            { y: 0, x: 0, scale: 1.00, ease: "none", duration: 25, force3D: true },
+            0
+          );
+          tl.fromTo(
+            mainLayerRefs.current[0],
+            { y: 0, x: 0, scale: 1.00, force3D: true },
+            { y: -mainY, x: mainX, scale: 1.02, ease: "none", duration: 25, force3D: true },
+            25
+          );
         }
         if (fgLayerRefs.current[0]) {
-          tl.fromTo(fgLayerRefs.current[0], { y: fgY, x: fgX, scale: 0.98, force3D: true }, { y: -fgY, x: -fgX, scale: 1.03, ease: "none", duration: 25, force3D: true }, 0);
+          tl.fromTo(
+            fgLayerRefs.current[0],
+            { y: fgY, x: fgX, scale: 0.98, force3D: true },
+            { y: 0, x: 0, scale: 1.00, ease: "none", duration: 25, force3D: true },
+            0
+          );
+          tl.fromTo(
+            fgLayerRefs.current[0],
+            { y: 0, x: 0, scale: 1.00, force3D: true },
+            { y: -fgY, x: fgX, scale: 1.03, ease: "none", duration: 25, force3D: true },
+            25
+          );
         }
 
-        // Scene 1: Active range [23, 50]
-        if (backLayerRefs.current[1]) {
-          tl.fromTo(backLayerRefs.current[1], { y: backY, x: backX, scale: 0.99, force3D: true }, { y: -backY, x: -backX, scale: 1.01, ease: "none", duration: 27, force3D: true }, 23);
-        }
-        if (mainLayerRefs.current[1]) {
-          tl.fromTo(mainLayerRefs.current[1], { y: mainY, x: -mainX, scale: 0.99, force3D: true }, { y: -mainY, x: mainX, scale: 1.02, ease: "none", duration: 27, force3D: true }, 23);
-        }
-        if (fgLayerRefs.current[1]) {
-          tl.fromTo(fgLayerRefs.current[1], { y: fgY, x: -fgX, scale: 0.98, force3D: true }, { y: -fgY, x: fgX, scale: 1.03, ease: "none", duration: 27, force3D: true }, 23);
-        }
-
-        // Scene 2: Active range [48, 75]
+        // Scene 2 (Scene 3 visually): Active range [48, 75]
         if (backLayerRefs.current[2]) {
-          tl.fromTo(backLayerRefs.current[2], { y: backY, x: -backX, scale: 0.99, force3D: true }, { y: -backY, x: backX, scale: 1.01, ease: "none", duration: 27, force3D: true }, 48);
+          tl.fromTo(
+            backLayerRefs.current[2],
+            { y: backY, x: -backX, scale: 0.99, force3D: true },
+            { y: -backY, x: backX, scale: 1.01, ease: "none", duration: 27, force3D: true },
+            48
+          );
         }
         if (mainLayerRefs.current[2]) {
-          tl.fromTo(mainLayerRefs.current[2], { y: mainY, x: 0, scale: 0.99, force3D: true }, { y: -mainY, x: 0, scale: 1.02, ease: "none", duration: 27, force3D: true }, 48);
+          tl.fromTo(
+            mainLayerRefs.current[2],
+            { y: mainY, x: 0, scale: 0.99, force3D: true },
+            { y: -mainY, x: 0, scale: 1.02, ease: "none", duration: 27, force3D: true },
+            48
+          );
         }
         if (fgLayerRefs.current[2]) {
-          tl.fromTo(fgLayerRefs.current[2], { y: fgY, x: fgX, scale: 0.97, force3D: true }, { y: -fgY, x: -fgX, scale: 1.04, ease: "none", duration: 27, force3D: true }, 48);
+          tl.fromTo(
+            fgLayerRefs.current[2],
+            { y: fgY, x: fgX, scale: 0.97, force3D: true },
+            { y: -fgY, x: -fgX, scale: 1.04, ease: "none", duration: 27, force3D: true },
+            48
+          );
         }
 
-        // Scene 3: Active range [73, 100]
+        // Scene 3 (Scene 4 visually): Active range [73, 100]
         if (backLayerRefs.current[3]) {
-          tl.fromTo(backLayerRefs.current[3], { y: backY, x: backX, scale: 0.99, force3D: true }, { y: -backY, x: -backX, scale: 1.01, ease: "none", duration: 27, force3D: true }, 73);
+          tl.fromTo(
+            backLayerRefs.current[3],
+            { y: backY, x: backX, scale: 0.99, force3D: true },
+            { y: -backY, x: -backX, scale: 1.01, ease: "none", duration: 27, force3D: true },
+            73
+          );
         }
         if (mainLayerRefs.current[3]) {
-          tl.fromTo(mainLayerRefs.current[3], { y: mainY, x: 0, scale: 0.99, force3D: true }, { y: -mainY, x: 0, scale: 1.02, ease: "none", duration: 27, force3D: true }, 73);
+          tl.fromTo(
+            mainLayerRefs.current[3],
+            { y: mainY, x: 0, scale: 0.99, force3D: true },
+            { y: -mainY, x: 0, scale: 1.02, ease: "none", duration: 27, force3D: true },
+            73
+          );
         }
         if (fgLayerRefs.current[3]) {
-          tl.fromTo(fgLayerRefs.current[3], { y: fgY, x: -fgX, scale: 0.98, force3D: true }, { y: -fgY, x: fgX, scale: 1.03, ease: "none", duration: 27, force3D: true }, 73);
+          tl.fromTo(
+            fgLayerRefs.current[3],
+            { y: fgY, x: -fgX, scale: 0.98, force3D: true },
+            { y: -fgY, x: fgX, scale: 1.03, ease: "none", duration: 27, force3D: true },
+            73
+          );
         }
 
         // Timeline duration boundary
@@ -491,110 +723,275 @@ export function ScrollStory() {
           </nav>
         )}
 
-        {/* Continuous Scenes Container */}
-        <div className={styles.scenesContainer}>
-          {STORY_SCENES.map((scene, index) => {
-            const isActive = isReducedMotion || activeIndex === index;
-            return (
+        {/* Mode A: Normal Motion — Shared Visual Shell + Continuous Parallax Stage */}
+        {!isReducedMotion && (
+          <div className={styles.stageGrid}>
+            {/* Left Column: Visual Stage (Shared Visual Shell for S1 & S2; S3 & S4 Overlay) */}
+            <div className={styles.cardCol}>
+              {/* S1 & S2: Shared Visual Shell */}
               <div
-                key={scene.id}
                 ref={(el) => {
-                  sceneRefs.current[index] = el;
+                  cardWrapperRefs.current[0] = el;
                 }}
-                className={styles.scene}
-                style={isReducedMotion ? { backgroundColor: scene.bgColor } : undefined}
-                data-scene-id={scene.id}
-                data-scene-index={index}
-                data-testid={`scene-${index + 1}`}
-                aria-hidden={!isActive && !isReducedMotion}
-                inert={!isActive && !isReducedMotion}
+                className={styles.cardScrubWrapper}
+                data-testid="card-scrub-wrapper-1"
               >
-                {/* Scene Content wrapper: GSAP animates autoAlpha, subtle directional y, and minimal blur */}
-                <div
-                  ref={(el) => {
-                    sceneContentRefs.current[index] = el;
+                <SharedVisualShell
+                  cardRef={(el) => {
+                    sharedCardRef.current = el;
                   }}
-                  className={styles.sceneContent}
-                  data-testid={`scene-content-${index + 1}`}
-                >
-                  <div className={styles.sceneInner}>
-                    {/* Left Column: Spatial Multi-Layer SceneVisual */}
-                    <div className={styles.cardCol}>
-                      <div
-                        ref={(el) => {
-                          cardWrapperRefs.current[index] = el;
-                        }}
-                        className={styles.cardScrubWrapper}
-                        data-testid={`card-scrub-wrapper-${index + 1}`}
-                      >
-                        <SceneVisual
-                          sceneIndex={index}
-                          number={scene.number}
-                          title={scene.title}
-                          cardColor={scene.cardColor}
-                          accentColor={scene.accentColor}
-                          tag={scene.tag}
-                          backRef={(el) => {
-                            backLayerRefs.current[index] = el;
-                          }}
-                          mainRef={(el) => {
-                            mainLayerRefs.current[index] = el;
-                          }}
-                          fgRef={(el) => {
-                            fgLayerRefs.current[index] = el;
-                          }}
-                        />
-                      </div>
-                    </div>
+                  backRef={(el) => {
+                    backLayerRefs.current[0] = el;
+                  }}
+                  mainRef={(el) => {
+                    mainLayerRefs.current[0] = el;
+                  }}
+                  fgRef={(el) => {
+                    fgLayerRefs.current[0] = el;
+                  }}
+                  content1Ref={(el) => {
+                    content1Ref.current = el;
+                  }}
+                  content2Ref={(el) => {
+                    content2Ref.current = el;
+                  }}
+                  tag1Ref={(el) => {
+                    tag1Ref.current = el;
+                  }}
+                  tag2Ref={(el) => {
+                    tag2Ref.current = el;
+                  }}
+                  num1Ref={(el) => {
+                    num1Ref.current = el;
+                  }}
+                  num2Ref={(el) => {
+                    num2Ref.current = el;
+                  }}
+                  sub1Ref={(el) => {
+                    sub1Ref.current = el;
+                  }}
+                  sub2Ref={(el) => {
+                    sub2Ref.current = el;
+                  }}
+                  head1Ref={(el) => {
+                    head1Ref.current = el;
+                  }}
+                  head2Ref={(el) => {
+                    head2Ref.current = el;
+                  }}
+                  fg1ChipsRef={(el) => {
+                    fg1ChipsRef.current = el;
+                  }}
+                  fg2ChipsRef={(el) => {
+                    fg2ChipsRef.current = el;
+                  }}
+                  back1AccRef={(el) => {
+                    back1AccRef.current = el;
+                  }}
+                  back2AccRef={(el) => {
+                    back2AccRef.current = el;
+                  }}
+                  backBadgeRef={(el) => {
+                    backBadgeRef.current = el;
+                  }}
+                />
+              </div>
 
-                    {/* Right Column: Narrative / Metadata */}
+              {/* Virtual wrapper for S2 query compatibility (clipPath: none) */}
+              <div
+                data-testid="card-scrub-wrapper-2"
+                style={{ clipPath: "none", position: "absolute", pointerEvents: "none", width: 0, height: 0 }}
+                aria-hidden="true"
+              />
+
+              {/* S3 Visual (Orange) — Activates at 46.5%, revealed with clip-path at [47.5, 52.5] */}
+              <div
+                ref={(el) => {
+                  cardWrapperRefs.current[2] = el;
+                }}
+                className={`${styles.cardScrubWrapper} ${styles.cardOverlay}`}
+                data-testid="card-scrub-wrapper-3"
+              >
+                <SceneVisual
+                  sceneIndex={2}
+                  number={STORY_SCENES[2].number}
+                  title={STORY_SCENES[2].title}
+                  cardColor={STORY_SCENES[2].cardColor}
+                  accentColor={STORY_SCENES[2].accentColor}
+                  tag={STORY_SCENES[2].tag}
+                  backRef={(el) => {
+                    backLayerRefs.current[2] = el;
+                  }}
+                  mainRef={(el) => {
+                    mainLayerRefs.current[2] = el;
+                  }}
+                  fgRef={(el) => {
+                    fgLayerRefs.current[2] = el;
+                  }}
+                />
+              </div>
+
+              {/* S4 Visual (Red) — Activates at 71.5%, revealed with clip-path at [72.5, 77.5] */}
+              <div
+                ref={(el) => {
+                  cardWrapperRefs.current[3] = el;
+                }}
+                className={`${styles.cardScrubWrapper} ${styles.cardOverlay}`}
+                data-testid="card-scrub-wrapper-4"
+              >
+                <SceneVisual
+                  sceneIndex={3}
+                  number={STORY_SCENES[3].number}
+                  title={STORY_SCENES[3].title}
+                  cardColor={STORY_SCENES[3].cardColor}
+                  accentColor={STORY_SCENES[3].accentColor}
+                  tag={STORY_SCENES[3].tag}
+                  backRef={(el) => {
+                    backLayerRefs.current[3] = el;
+                  }}
+                  mainRef={(el) => {
+                    mainLayerRefs.current[3] = el;
+                  }}
+                  fgRef={(el) => {
+                    fgLayerRefs.current[3] = el;
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Right Column: Narrative Stack (Decoupled Staggered Text) */}
+            <div className={styles.narrativeStack}>
+              {STORY_SCENES.map((scene, index) => {
+                const isActive = activeIndex === index;
+                return (
+                  <div
+                    key={scene.id}
+                    className={styles.narrativeCol}
+                    data-scene-id={scene.id}
+                    data-scene-index={index}
+                    data-testid={`scene-${index + 1}`}
+                    aria-hidden={!isActive}
+                    inert={!isActive}
+                  >
                     <div
                       ref={(el) => {
-                        narrativeRefs.current[index] = el;
+                        sceneContentRefs.current[index] = el;
                       }}
-                      className={styles.narrativeCol}
-                      data-testid={`scene-narrative-${index + 1}`}
+                      className={styles.sceneContent}
+                      data-testid={`scene-content-${index + 1}`}
                     >
-                      <div className={styles.sceneHeader}>
-                        <span
-                          className={styles.sceneBadge}
-                          style={{
-                            color: scene.accentColor,
-                            borderColor: `${scene.accentColor}55`,
-                          }}
-                        >
-                          SCENE {scene.number} / 04
-                        </span>
-                        <span className={styles.sceneTag}>{scene.tag}</span>
-                      </div>
-
-                      <h2 className={styles.sceneTitle}>{scene.title}</h2>
-                      <p className={styles.sceneDescription}>{scene.description}</p>
-
-                      <div className={styles.sceneStatus}>
-                        <div className={styles.statusRow}>
+                      <div
+                        ref={(el) => {
+                          narrativeRefs.current[index] = el;
+                        }}
+                        className={styles.narrativeInner}
+                        data-testid={`scene-narrative-${index + 1}`}
+                        style={{ width: "100%" }}
+                      >
+                        <div className={styles.sceneHeader}>
                           <span
-                            className={styles.statusDot}
-                            style={{ backgroundColor: scene.accentColor }}
-                          />
-                          <span className={styles.statusText}>
-                            {index === 0 && "Plateau: 0%–21% • Transition: 21.5%–28.5%"}
-                            {index === 1 && "Plateau: 32%–46% • Transition: 46.5%–53.5%"}
-                            {index === 2 && "Plateau: 57%–71% • Transition: 71.5%–78.5%"}
-                            {index === 3 && "Plateau: 82%–100% • Release past 100%"}
+                            className={styles.sceneBadge}
+                            style={{
+                              color: scene.accentColor,
+                              borderColor: `${scene.accentColor}55`,
+                            }}
+                          >
+                            SCENE {scene.number} / 04
                           </span>
+                          <span className={styles.sceneTag}>{scene.tag}</span>
                         </div>
-                        <div className={styles.scrollHint}>
-                          <span>↕ Scrub to inspect tri-layer spatial parallax</span>
+
+                        <h2 className={styles.sceneTitle}>{scene.title}</h2>
+                        <p className={styles.sceneDescription}>{scene.description}</p>
+
+                        <div className={styles.sceneStatus}>
+                          <div className={styles.statusRow}>
+                            <span
+                              className={styles.statusDot}
+                              style={{ backgroundColor: scene.accentColor }}
+                            />
+                            <span className={styles.statusText}>
+                              {index === 0 && "Plateau: 0%–21% • Transition: 20%–30%"}
+                              {index === 1 && "Plateau: 32%–46% • Transition: 46.5%–53.5%"}
+                              {index === 2 && "Plateau: 57%–71% • Transition: 71.5%–78.5%"}
+                              {index === 3 && "Plateau: 82%–100% • Release past 100%"}
+                            </span>
+                          </div>
+                          <div className={styles.scrollHint}>
+                            <span>
+                              {index <= 1
+                                ? "↕ Shared Visual Shell with Continuous Color Morphing"
+                                : "↕ Scrub to inspect tri-layer spatial parallax"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Mode B: Prefers-reduced-motion Mode — Static Semantic Flow */}
+        {isReducedMotion && (
+          <div className={styles.reducedMotionContainer}>
+            {STORY_SCENES.map((scene, index) => (
+              <div
+                key={scene.id}
+                className={styles.reducedMotionScene}
+                style={{ backgroundColor: scene.bgColor }}
+                data-scene-id={scene.id}
+                data-scene-index={index}
+                data-testid={`scene-${index + 1}`}
+              >
+                <div
+                  className={styles.sceneContent}
+                  data-testid={`scene-content-${index + 1}`}
+                  style={{ display: "contents" }}
+                >
+                  <div className={styles.cardCol}>
+                    <div
+                      className={styles.cardScrubWrapper}
+                      data-testid={`card-scrub-wrapper-${index + 1}`}
+                    >
+                      <SceneVisual
+                        sceneIndex={index}
+                        number={scene.number}
+                        title={scene.title}
+                        cardColor={scene.cardColor}
+                        accentColor={scene.accentColor}
+                        tag={scene.tag}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    className={styles.narrativeCol}
+                    data-testid={`scene-narrative-${index + 1}`}
+                  >
+                    <div className={styles.sceneHeader}>
+                      <span
+                        className={styles.sceneBadge}
+                        style={{
+                          color: scene.accentColor,
+                          borderColor: `${scene.accentColor}55`,
+                        }}
+                      >
+                        SCENE {scene.number} / 04
+                      </span>
+                      <span className={styles.sceneTag}>{scene.tag}</span>
+                    </div>
+
+                    <h2 className={styles.sceneTitle}>{scene.title}</h2>
+                    <p className={styles.sceneDescription}>{scene.description}</p>
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -90,25 +90,32 @@ npm run start
 
 ## 六、当前状态
 
-- 当前完成：**Phase 3 P0 Remediation (Single-Focus Scene Handoff)**
-- 当前状态：`PHASE_3_P0_READY_FOR_OWNER_REVIEW / P0_OWNER_ACCEPTANCE_PENDING`
-- 本阶段核心成果：
-  1. **P0 彻底根除场景交接重影（Single-Focus Scene Handoff）**：针对 Phase 3 Candidate B 中半透明叠影与双卡片轮廓残留问题进行架构级根治。将场景内容解耦为「共享视觉舞台（Shared Visual Viewport）」与「错峰叙事文字（Decoupled Staggered Text）」独立时间线：
-     - **主视觉受控遮罩（Controlled Reveal Mask）**：新旧卡片在相同空间视口坐标对齐，入场卡片通过 GPU 加速的 `clip-path` 互补渐进展开（转场中点精确呈现 50% 遮罩接管），两套卡片始终保持 100% 不透明度与饱满色彩，从几何与合成根源上消除双重矩形轮廓、叠影以及 Orange→Red 中的异常暗化。
-     - **错峰叙事文字（Staggered Narrative Handoff）**：出场标题正文先行淡出并在交接中点保持完全隐去（可读重叠为 0%），新标题正文随后自下而上进场，彻底杜绝文字叠影与两套标题同时辨认的问题，移动端单列垂直布局完全无冲突。
-     - **连续平滑背景与视差稳定**：`AmbientBackground` 维持全视口平滑连续渐变；交接窗口内各空间层视差平缓过渡，确保视觉焦点稳定可逆，停止滚动即停，反向回滚严格保真。
-  2. **三层空间视差架构（Tri-Layer Spatial Architecture）**：在单个场景内构建三层独立运动层级：
-     - **BackLayer**（空间底板）：低对比度网格与几何深度参照（位移 ±14px Y、±6px X、缩放 0.99–1.01）。
-     - **MainLayer**（核心焦点）：主界面与交互画布主体（位移 ±20px Y、±8px X、缩放 0.99–1.02）。
-     - **ForegroundLayer**（前景悬浮）：独立状态芯片与悬浮徽章（位移 ±32px Y、±14px X、缩放 0.98–1.03）。
-  3. **四场景差异化空间构图**：
-     - **Scene 01 (Purple)**：主视口锁定容器 + 双分离悬浮面板 + 几何景深网格。
-     - **Scene 02 (Teal)**：左右工作区对比面板 + 动态检视器 + 解耦光晕。
-     - **Scene 03 (Orange)**：三层纵深堆叠画板 + 景深指示芯片。
-     - **Scene 04 (Red)**：展示卡组前奏堆叠，预留 Phase 4 横向轮播视觉动线。
-  4. **舞台叙事紧凑化与统一导航 HUD**：
-     - Intro 区域由 85vh 精简为 42vh（缩短约 50% 无效前置滚动），用户更快进入舞台。
-     - Outro 区域由 85vh 精简为 44vh，实现舞台释放后平滑收束。
-     - 底部离散指示器升级为全景顶部 Stage HUD（集成阶段标识、4 场景直达 Pill、全宽 2px 滚动进度条）。
-  5. **绝对属性所有权隔离**：场景进入/退出由 `sceneContent` 管理，三层独立视差分别由 `backLayer`、`mainLayer`、`fgLayer` 节点独占，无任何 GSAP Transform 竞争冲突，反向滚动严格保真。
-  6. **性能与可访问性**：桌面端（1440×900）与移动端（375×667）无水平溢出；`prefers-reduced-motion` 降级为纯静态文档流，无固定舞台与视差开销。
+- 当前完成：**Phase 3 P0 Remediation V2 (Shared Visual Shell + Content Morphing — T1 Prototype)**
+- 当前状态：`PHASE_3_P0_V2_T1_READY_FOR_OWNER_REVIEW / P0_OWNER_ACCEPTANCE_PENDING`
+- 演化迭代三代机制对比：
+  | 版本 | 核心方案 | 视觉表现与遗留问题 | 评审结论 |
+  |---|---|---|---|
+  | **Phase 3 Candidate B** | 异步非对称 Crossfade (两套卡片 20.6% 叠合) | 91.3% 卡片重合区产生双重外框半透明叠影，两套标题同时清晰可见 | 已否决 (P0 重影) |
+  | **P0 Remediation V1** | Single-Focus 视口遮罩 (clip-path 上下揭示) | 消除半透明重影，但上下遮罩把两套界面拼在同一张卡片中（上嵌新卡控制条，下留旧卡内容），产生科学怪人拼接感 | Owner 明确否决 (界面拼接) |
+  | **P0 Remediation V2 (本轮)** | **Shared Visual Shell + Content Morphing** | DOM 仅保留单张持久主视觉 Shell，外框/控制点/几何锚点恒定稳定；滚动驱动卡片背景色连续演变（#7c3aed  пурпур → #4467bb 海蓝 → #0d9488 鸭绿）；内部图形错峰演变，文字错峰交接，零遮罩硬裁切，零界面拼接 | **当前原型已就绪，等待 Owner 审看** |
+
+- 本轮 Phase 3 P0 V2 核心成果：
+  1. **真正的共享主视觉容器（Shared Visual Shell）**：
+     - DOM 中仅存在单一的主视觉卡片实例（`[data-testid="shared-visual-shell"]`），在 Purple → Teal 的整个过渡区间（20%–30%）内**绝不卸载、不瞬间形变、不产生双重外框、不被上下裁切**。
+     - **持久界面骨架（Persistent Frame）**：窗口控制三圆点（Control Dots）、面包屑导航与编号槽位、卡片外边框阴影以及底部定位元数据（`FOCAL LAYER: MAIN / PERSPECTIVE: 1000PX`）作为绝对稳定的几何与视觉锚点恒定存在，转场时不重建、不闪烁。
+  2. **绝对滚动进度驱动的连续颜色演变（Continuous Color Morphing）**：
+     - GSAP 直接以线性/平滑缓动驱动主卡片背景色从 Purple (`#7c3aed`) 经过深邃海蓝 (`#4467bb`) 连续演变为 Teal (`#0d9488`)。
+     - 摒弃两张半透明卡片混合导致的暗化发灰，反向滚动沿严格数学轨迹 100% 互逆回滚。
+  3. **卡片内部内容错峰演变（Content Morphing）**：
+     - 旧场景图形（Scene 01 视口锁定与波形图）在 [21.0%, 24.5%] 平滑淡出（`opacity: 1 → 0`, `y: 0 → -8px`, `scale: 1 → 0.98`）。
+     - 新场景图形（Scene 02 左右分栏检视器）在 [25.5%, 29.0%] 自下而上就位（`opacity: 0 → 1`, `y: 8px → 0`, `scale: 0.98 → 1`）。
+     - 在中点 [24.5%, 25.5%] 形成自然呼吸间隙，两套完整界面绝不同时清晰可见，持久卡片外壳与渐变色彩全程充当视觉焦点，彻底消除拼接割裂与视觉空洞。
+  4. **叙事文字与三层空间视差无缝协同**：
+     - 右侧叙事文字采用解耦错峰时间线（旧标题 [21.5%, 24.2%] 移出淡隐，新标题 [25.8%, 28.5%] 渐入），转场中点文本辨识度重合为 0%，移动端单列布局绝不重叠冲突。
+     - 三层空间视差（BackLayer、MainLayer、ForegroundLayer）平稳穿越 T1 区间，MainLayer 视差变换施加于图层容器，内容演变施加于卡片内部子容器，两类 Transform 完全隔离、互不争夺。
+  5. **T2 (Teal → Orange) 与 T3 (Orange → Red) 基线严格保留**：
+     - 本轮改造严格受控在 Scene 01 → Scene 02 (T1) 原型验证范围。
+     - T2 与 T3 维持原 Single-Focus 遮罩揭示基线不变，为后续转场演进保留对照参照，未擅自复制或推广。
+  6. **无障碍与全响应式保真**：
+     - `prefers-reduced-motion` 保持静态文档语义流降级，展示全部 4 个场景完备信息，不执行任何 Morphing 或动态固定。
+     - 桌面端（1440×900）与移动端（375×667）全链路测试通过，提供完整正反向滚动录屏留档（`test-results/videos/`）。

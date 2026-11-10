@@ -175,8 +175,8 @@ async function runComprehensiveVerification() {
   console.log(`  T2 (P=0.50): S3 Card Clip=${m2.scenes[2].cardClip}, S2 Text=${m2.scenes[1].narrativeOpacity}, S3 Text=${m2.scenes[2].narrativeOpacity}`);
   console.log(`  T3 (P=0.75): S4 Card Clip=${m3.scenes[3].cardClip}, S3 Text=${m3.scenes[2].narrativeOpacity}, S4 Text=${m3.scenes[3].narrativeOpacity}`);
 
-  // Assert Single-Focus Card Mask at midpoint (around 50% reveal mask)
-  console.assert(m1.scenes[1].cardClip.includes('50%') || m1.scenes[1].cardClip.includes('49') || m1.scenes[1].cardClip.includes('50'), 'T1: Scene 2 card must be at ~50% reveal mask');
+  // Assert T1 Shared Visual Shell (no mask clipping) and T2/T3 Single-Focus Mask at midpoint
+  console.assert(m1.scenes[1].cardClip === 'none' || m1.scenes[1].cardClip === '', 'T1: Shared Visual Shell must have no clip mask (clip-path: none)');
   console.assert(m2.scenes[2].cardClip.includes('50%') || m2.scenes[2].cardClip.includes('49') || m2.scenes[2].cardClip.includes('50'), 'T2: Scene 3 card must be at ~50% reveal mask');
   console.assert(m3.scenes[3].cardClip.includes('50%') || m3.scenes[3].cardClip.includes('49') || m3.scenes[3].cardClip.includes('50'), 'T3: Scene 4 card must be at ~50% reveal mask');
 

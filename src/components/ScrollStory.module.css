@@ -130,63 +130,9 @@
 }
 
 /* ==========================================================================
-   Scenes & Content
+   Continuous Stage Layout (Normal Motion)
    ========================================================================== */
-.scenesContainer {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-}
-
-.scene {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.scene[data-scene-index="0"] {
-  z-index: 10;
-}
-
-.scene[data-scene-index="1"] {
-  z-index: 11;
-}
-
-.scene[data-scene-index="2"] {
-  z-index: 12;
-}
-
-.scene[data-scene-index="3"] {
-  z-index: 13;
-}
-
-.sceneContent {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-}
-
-/* Static fallback for initial render before GSAP mounts */
-.scene:first-child .sceneContent {
-  opacity: 1;
-  visibility: visible;
-}
-
-.scene:not(:first-child) .sceneContent {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.sceneInner {
+.stageGrid {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   gap: 3.5rem;
@@ -196,6 +142,9 @@
   padding: 4.5rem 2.5rem 2rem;
   align-items: center;
   box-sizing: border-box;
+  height: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .cardCol {
@@ -203,6 +152,7 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  position: relative;
 }
 
 .cardScrubWrapper {
@@ -211,10 +161,24 @@
   display: flex;
   justify-content: center;
   position: relative;
-  will-change: clip-path;
+  will-change: clip-path, transform, opacity;
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.narrativeStack {
+  position: relative;
+  display: grid;
+  grid-template-areas: "narrative";
+  width: 100%;
 }
 
 .narrativeCol {
+  grid-area: narrative;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -299,6 +263,32 @@
 }
 
 /* ==========================================================================
+   Reduced Motion Fallback Container & Scene Cards
+   ========================================================================== */
+.reducedMotionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  padding: 2.5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reducedMotionScene {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 3.5rem;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
    Tablet Breakpoint (max-width: 1024px)
    ========================================================================== */
 @media (max-width: 1024px) {
@@ -306,7 +296,7 @@
     padding: 0.625rem 1.5rem;
   }
 
-  .sceneInner {
+  .stageGrid {
     gap: 2rem;
     padding: 4.25rem 1.5rem 1.5rem;
   }
@@ -317,6 +307,11 @@
 
   .sceneDescription {
     font-size: 1rem;
+  }
+
+  .reducedMotionScene {
+    gap: 2rem;
+    padding: 1.5rem;
   }
 }
 
@@ -350,7 +345,7 @@
     display: none;
   }
 
-  .sceneInner {
+  .stageGrid {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -400,6 +395,13 @@
   .scrollHint {
     font-size: 0.6875rem;
   }
+
+  .reducedMotionScene {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.25rem;
+  }
 }
 
 /* ==========================================================================
@@ -423,53 +425,7 @@
     display: none;
   }
 
-  .scenesContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 2.5rem;
-    padding: 2.5rem 1.5rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .scene,
-  .scene:not(:first-child) {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    height: auto;
-    opacity: 1 !important;
-    visibility: visible !important;
-    pointer-events: auto !important;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  }
-
-  .sceneContent,
-  .scene:first-child .sceneContent,
-  .scene:not(:first-child) .sceneContent {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    filter: none !important;
-    will-change: auto;
-  }
-
-  .sceneInner {
-    padding: 2rem;
-  }
-
-  .cardScrubWrapper {
-    transform: none !important;
-    clip-path: none !important;
-    will-change: auto;
-  }
-
-  .narrativeCol {
-    opacity: 1 !important;
-    visibility: visible !important;
-    transform: none !important;
-    will-change: auto;
+  .stageGrid {
+    display: none !important;
   }
 }

@@ -1,0 +1,518 @@
+.visualStage {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  height: 400px;
+  perspective: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Layer 1: BackLayer — Spatial Depth Reference
+   ========================================================================== */
+.backLayer {
+  z-index: 1;
+  will-change: transform;
+}
+
+.backGridPlate {
+  position: relative;
+  width: 106%;
+  height: 106%;
+  border-radius: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(10, 12, 18, 0.45);
+  backdrop-filter: blur(2px);
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.backGridDashes {
+  position: absolute;
+  inset: 0;
+  background-size: 20px 20px;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+  opacity: 0.6;
+}
+
+.backDepthBadge {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-family: monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.8);
+  will-change: opacity;
+}
+
+.backCornerBracket {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  width: 24px;
+  height: 24px;
+  border-bottom: 2px solid rgba(167, 139, 250, 0.5);
+  border-left: 2px solid rgba(167, 139, 250, 0.5);
+  will-change: opacity, transform;
+}
+
+.backRuler {
+  position: absolute;
+  bottom: 14px;
+  left: 16px;
+  right: 16px;
+  height: 8px;
+  border-bottom: 1px dashed rgba(45, 212, 191, 0.5);
+  will-change: opacity, transform;
+}
+
+/* ==========================================================================
+   Layer 2: MainLayer — Persistent Shared Visual Shell
+   ========================================================================== */
+.mainLayer {
+  z-index: 2;
+  pointer-events: auto;
+  will-change: transform;
+}
+
+.mainCard {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  will-change: background-color, transform;
+  overflow: hidden;
+}
+
+/* Persistent Top Bar (Window Chrome) */
+.cardTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 0.75rem;
+  gap: 0.5rem;
+}
+
+.windowControls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.breadcrumbWrapper {
+  position: relative;
+  display: grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  flex: 1;
+  margin: 0 0.5rem;
+  overflow: hidden;
+}
+
+.stageBreadcrumb {
+  grid-area: stack;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  will-change: opacity, transform;
+}
+
+.cardNumberWrapper {
+  position: relative;
+  display: grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.cardNumber {
+  grid-area: stack;
+  font-family: monospace;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  opacity: 0.85;
+  will-change: opacity, transform;
+}
+
+/* Card Body & Morphing Content */
+.cardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.subWrapper {
+  position: relative;
+  display: grid;
+  grid-template-areas: "stack";
+}
+
+.sceneSub {
+  grid-area: stack;
+  font-family: monospace;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  will-change: opacity, transform;
+}
+
+.headingWrapper {
+  position: relative;
+  display: grid;
+  grid-template-areas: "stack";
+}
+
+.cardHeading {
+  grid-area: stack;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  color: #ffffff;
+  will-change: opacity, transform;
+}
+
+/* Internal Morphing Graphic Region */
+.contentRegion {
+  position: relative;
+  display: grid;
+  grid-template-areas: "pane";
+  align-items: center;
+  min-height: 60px;
+}
+
+.contentPane {
+  grid-area: pane;
+  width: 100%;
+  will-change: opacity, transform;
+}
+
+/* Scene 01 Preview Layout */
+.scene01Preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.mockViewportFrame {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mockCrosshair {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+}
+
+.previewTag {
+  font-family: monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.mockWaveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+}
+
+.waveBar {
+  width: 3px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 1px;
+}
+.waveBar:nth-child(1) { height: 60%; }
+.waveBar:nth-child(2) { height: 100%; }
+.waveBar:nth-child(3) { height: 40%; }
+.waveBar:nth-child(4) { height: 75%; }
+
+/* Scene 02 Preview Layout */
+.scene02Preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.splitLeft,
+.splitRight {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.splitHeader {
+  font-family: monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.splitBlock {
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.splitBlockActive {
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.splitDivider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Persistent Footer */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 0.6rem;
+  font-family: monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+/* ==========================================================================
+   Layer 3: ForegroundLayer — Floating accessory chips
+   ========================================================================== */
+.foregroundLayer {
+  z-index: 3;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.chipsGroup {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+.floatingChip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(14, 18, 26, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  pointer-events: auto;
+}
+
+.chipTopRight {
+  top: -16px;
+  right: -16px;
+}
+
+.chipBottomLeft {
+  bottom: -16px;
+  left: -16px;
+}
+
+.chipIndicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chipBadge {
+  font-family: monospace;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.chipText {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .visualStage {
+    max-width: 440px;
+    height: 340px;
+  }
+
+  .mainCard {
+    padding: 1rem 1.25rem;
+  }
+
+  .cardHeading {
+    font-size: 1.15rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .visualStage {
+    max-width: 100%;
+    height: 200px;
+    perspective: none;
+  }
+
+  .backGridPlate {
+    width: 100%;
+    height: 100%;
+  }
+
+  .mainCard {
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+  }
+
+  .cardTopBar {
+    padding-bottom: 0.4rem;
+  }
+
+  .cardBody {
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+  }
+
+  .cardHeading {
+    font-size: 0.9375rem;
+  }
+
+  .scene01Preview,
+  .scene02Preview {
+    display: none;
+  }
+
+  .contentRegion {
+    min-height: 0;
+  }
+
+  .cardFooter {
+    padding-top: 0.35rem;
+    font-size: 0.5625rem;
+  }
+
+  .chipTopRight {
+    top: -8px;
+    right: 8px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .chipBottomLeft {
+    bottom: -8px;
+    left: 8px;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .chipText {
+    font-size: 0.625rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visualStage {
+    perspective: none;
+    height: auto;
+    min-height: 240px;
+  }
+
+  .layer,
+  .backLayer,
+  .mainLayer,
+  .foregroundLayer {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .backLayer,
+  .foregroundLayer {
+    display: none;
+  }
+
+  .mainLayer {
+    display: block;
+  }
+}
